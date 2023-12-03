@@ -27,7 +27,10 @@ const games: Game[] = input
       .slice(1)
       .map((s) =>
         Object.fromEntries(
-          s.split(",").map((ss) => ss.trim().split(" ").reverse())
+          s.split(",").map((ss) => {
+            const [count, color] = ss.trim().split(" ");
+            return [color, parseInt(count, 10)];
+          })
         )
       );
     return { gameSets, id: parseInt(id, 10) };
@@ -40,3 +43,20 @@ const validGames = games.filter(({ gameSets }) =>
 const sumOfIds = validGames.map(({ id }) => id).reduce((a, b) => a + b);
 
 console.log("sumOfIds", sumOfIds);
+
+const gameMinimums = games.map(({ gameSets }) =>
+  gameSets.reduce((minimums, gameSet) => {
+    const newMax = (color: Color) => {
+      const value = gameSet[color];
+      const max = minimums[color];
+      return (value && !max) || (value && max && value > max) ? value : max;
+    };
+    return { green: newMax("green"), red: newMax("red"), blue: newMax("blue") };
+  }, {} as Partial<GameLimit>)
+) as GameLimit[];
+
+const powers = gameMinimums
+  .map((limit) => limit.green * limit.blue * limit.red)
+  .reduce((a, b) => a + b);
+
+console.log("powers", powers);
