@@ -1,4 +1,6 @@
 import fs from "fs";
+import "core-js/full";
+
 const input = fs.readFileSync(process.stdin.fd, "utf-8");
 
 const rowWidth = input.indexOf("\n");
@@ -27,16 +29,14 @@ const rowsFlat = input
   .filter((line) => line)
   .join("");
 
-const specialCharIndexes = new Set(
-  [...rowsFlat.matchAll(/[^\d\.]/g)].map((m) => m.index)
-);
+const gearIndexes = new Set([...rowsFlat.matchAll(/\*/g)].map((m) => m.index));
 const numberData = [...rowsFlat.matchAll(/\d+/g)].map((m) => ({
   index: m.index || 0,
   width: m[0].length,
   value: parseInt(m[0], 10),
 }));
 
-function isAdjacentToSymbol(numIndex: number, numWidth: number) {
+function adjacentGearIndex(numIndex: number, numWidth: number) {
   const numberIndexes = [...Array(numWidth).keys()].map(
     (_x, i) => i + numIndex
   );
@@ -49,13 +49,31 @@ function isAdjacentToSymbol(numIndex: number, numWidth: number) {
     }
     return acc;
   }, new Set(numberIndexes));
-  return [...indexes].some((i) => specialCharIndexes.has(i));
+  for (const index of indexes) {
+    if (gearIndexes.has(index)) {
+      return index;
+    }
+  }
+  return null;
 }
 
-const symbolAdjacentNumbers = numberData
-  .filter(({ index, width }) => isAdjacentToSymbol(index, width))
-  .map(({ value }) => value);
+const gearAdjacentNumbers = numberData.map(({ index, width, value }) => ({
+  value,
+  adjacentGearIndex: adjacentGearIndex(index, width),
+}));
 
-const sum = symbolAdjacentNumbers.reduce((a, b) => a + b, 0);
+// @ts-expect-error
+const gearAdjacentGroupedNumbers = Object.groupBy(
+  gearAdjacentNumbers,
+  // @ts-expect-error
+  ({ adjacentGearIndex }) => adjacentGearIndex
+);
+
+const sum = Object.values(
+  gearAdjacentGroupedNumbers as Record<string, { value: number }[]>
+)
+  .filter((v) => v.length === 2)
+  .flatMap((values) => values.map(({ value }) => value).reduce((a, b) => a * b))
+  .reduce((a, b) => a + b);
 
 console.log("sum", sum);
