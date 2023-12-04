@@ -2,7 +2,7 @@ import fs from "fs";
 import "core-js/full";
 
 const input = fs.readFileSync(process.stdin.fd, "utf-8");
-const scores = input
+const winsPerCard = input
   .split("\n")
   .filter((line) => line)
   .map((line) => {
@@ -13,13 +13,22 @@ const scores = input
       .map((i) => new Set(i.match(/\d+/g).map((x) => parseInt(x, 10))));
     // @ts-expect-error
     const yourWinningNums: Set<number> = winningNums.intersection(nums);
-    return yourWinningNums.size === 0
-      ? 0
-      : yourWinningNums.size === 1
-      ? 1
-      : 2 ** (yourWinningNums.size - 1);
+    return yourWinningNums.size;
   });
 
-const sum = scores.reduce((a, b) => a + b);
+function totalWins(winsPerCard: number[], index: number): number {
+  const wins = winsPerCard[index];
+  const nextWinningCardIndexes = [...new Array(wins)].map(
+    (_x, i) => i + 1 + index
+  );
+  const nextWinningCardsSum = nextWinningCardIndexes
+    .map((i) => totalWins(winsPerCard, i))
+    .reduce((a, b) => a + b, 0);
+  return 1 + nextWinningCardsSum;
+}
 
-console.log("sum", sum);
+const total = [...new Array(winsPerCard.length)]
+  .map((_x, i) => totalWins(winsPerCard, i))
+  .reduce((a, b) => a + b);
+
+console.log("totalWins", total);
