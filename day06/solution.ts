@@ -4,19 +4,19 @@ const input = fs.readFileSync(process.stdin.fd, "utf-8");
 const [times, distances] = input
   .split("\n")
   .filter((line) => line)
-  .map((line) => line.match(/\d+/g)?.map((x) => parseInt(x, 10)));
+  .map((line) => line.match(/\d+/g)?.join(""));
 
 interface Entry {
   time: number;
   distance: number;
 }
 
-const entries: Entry[] = (times as number[]).map((time, index) => ({
-  time,
-  distance: (distances as number[])[index],
-}));
+const entry = {
+  time: parseInt(times as string, 10),
+  distance: parseInt(distances as string, 10),
+};
 
-console.log("timeDistances", entries);
+console.log("entry", entry);
 
 function waysToWin(entry: Entry): number {
   let total = 0;
@@ -30,9 +30,4 @@ function waysToWin(entry: Entry): number {
   return total;
 }
 
-console.log(
-  "waysToWin",
-  entries
-    .map((entry) => waysToWin(entry))
-    .reduce((x: number, y: number) => x * y, 1)
-);
+console.log("waysToWin", waysToWin(entry));
